@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cocina KDS — El Buen Sabor</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text-high: #f8fafc;
+      --text: #cbd5e1;
+      --text-muted: #94a3b8;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --accent: #ea580c;
+      --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+      --serif: "IBM Plex Serif", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      padding: 18px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 18px;
+    }
+    .title { display: flex; align-items: center; gap: 12px; }
+    .title h1 { margin: 0; font-family: var(--serif); font-size: 20px; color: var(--text-high); }
+    .pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--ok);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text-high);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: #334155; }
+    .kds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+    .ticket {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .ticket.nuevo { border-color: var(--ok); }
+    .ticket.preparando { border-color: var(--warn); }
+    .ticket-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mesa-big {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-high);
+    }
+    .badge-nuevo {
+      background: var(--ok);
+      color: #052e16;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .badge-prep {
+      background: var(--warn);
+      color: #451a03;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .items-list { list-style: none; margin: 0; padding: 0; }
+    .items-list li {
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+      color: var(--text-high);
+    }
+    .nota-box {
+      padding: 8px 10px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 4px;
+      font-size: 12px;
+      color: #fde68a;
+    }
+    .timer {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ok);
+    }
+    .timer.warn { color: var(--warn); }
+    .timer.late { color: var(--danger); }
+    .btn-action {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-start { background: var(--warn); color: #1c1917; }
+    .btn-ready { background: var(--ok); color: #022c22; }
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px 16px;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>Cocina — Por orden de llegada</h1>
+      <span id="connPill" class="pill">EN VIVO</span>
+    </div>
+    <div class="nav">
+      <span id="userLabel" style="font-size:12px;color:var(--text-muted)"></span>
+      <span id="clock" style="font-size:13px;font-weight:700;color:var(--text-high)"></span>
+      <a href="/mozo" class="btn">Vista Mozo</a>
+      <a href="/dashboard" class="btn" id="dashLink" style="display:none">Dashboard</a>
+      <button type="button" class="btn" onclick="logout()">Salir</button>
+    </div>
+  </header>
+
+  <main class="kds-grid" id="kdsGrid"></main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (!token || !user || !['cocinero', 'admin'].includes(user.rol)) {
+      window.location.href = '/login'
+    }
+
+    document.getElementById('userLabel').textContent = `${user.nombre} (${user.rol})`
+    if (user.rol === 'admin') document.getElementById('dashLink').style.display = 'inline-block'
+
+    let pedidos = []
+
+    function logout() {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.value = 880
+        gain.gain.value = 0.08
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start()
+        setTimeout(() => { osc.stop(); ctx.close() }, 180)
+      } catch (_) {}
+    }
+
+    function formatElapsed(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000))
+      const min = String(Math.floor(totalSec / 60)).padStart(2, '0')
+      const sec = String(totalSec % 60).padStart(2, '0')
+      return `${min}:${sec}`
+    }
+
+    async function cargarCocina() {
+      const res = await fetch('/api/pedidos/cocina', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.status === 401 || res.status === 403) return logout()
+      pedidos = await res.json()
+      renderTickets()
+    }
+
+    async function cambiarEstado(id, estado) {
+      const res = await fetch(`/api/pedidos/${encodeURIComponent(id)}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado })
+      })
+      if (res.ok) await cargarCocina()
+    }
+
+    function renderTickets() {
+      const grid = document.getElementById('kdsGrid')
+      grid.innerHTML = ''
+      if (pedidos.length === 0) {
+        const emp = document.createElement('div')
+        emp.className = 'empty'
+        emp.textContent = 'Sin comandas pendientes. Todo al día en cocina.'
+        grid.appendChild(emp)
+        return
+      }
+
+      const now = Date.now()
+      pedidos.forEach((p) => {
+        const card = document.createElement('article')
+        card.className = 'ticket ' + (p.estado === 'CREADO' ? 'nuevo' : 'preparando')
+
+        const head = document.createElement('div')
+        head.className = 'ticket-head'
+        const left = document.createElement('div')
+        const mesa = document.createElement('div')
+        mesa.className = 'mesa-big'
+        mesa.textContent = p.mesaCodigo
+        const cod = document.createElement('div')
+        cod.style.fontSize = '11px'
+        cod.style.color = 'var(--text-muted)'
+        cod.textContent = p.codigo
+        left.appendChild(mesa)
+        left.appendChild(cod)
+
+        const badge = document.createElement('span')
+        badge.className = p.estado === 'CREADO' ? 'badge-nuevo' : 'badge-prep'
+        badge.textContent = p.estado === 'CREADO' ? 'NUEVO' : 'PREPARANDO'
+
+        head.appendChild(left)
+        head.appendChild(badge)
+
+        const ul = document.createElement('ul')
+        ul.className = 'items-list'
+        ;(p.items || []).forEach((it) => {
+          const li = document.createElement('li')
+          li.textContent = `${it.cantidad}× ${it.nombre}`
+          ul.appendChild(li)
+        })
+
+        const body = document.createElement('div')
+        body.style.display = 'flex'
+        body.style.flexDirection = 'column'
+        body.style.gap = '10px'
+        body.appendChild(head)
+        body.appendChild(ul)
+
+        if (p.notasGenerales) {
+          const nota = document.createElement('div')
+          nota.className = 'nota-box'
+          nota.textContent = `Nota: ${p.notasGenerales}`
+          body.appendChild(nota)
+        }
+
+        const foot = document.createElement('div')
+        foot.style.display = 'flex'
+        foot.style.flexDirection = 'column'
+        foot.style.gap = '10px'
+
+        const elapsedMs = now - p.createdAt
+        const timer = document.createElement('div')
+        timer.className = 'timer' + (elapsedMs > 600000 ? ' late' : elapsedMs > 300000 ? ' warn' : '')
+        timer.dataset.createdAt = p.createdAt
+        timer.textContent = formatElapsed(elapsedMs)
+
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        if (p.estado === 'CREADO') {
+          btn.className = 'btn-action btn-start'
+          btn.textContent = 'Empezar a preparar'
+          btn.onclick = () => cambiarEstado(p.id, 'EN_COCINA')
+        } else {
+          btn.className = 'btn-action btn-ready'
+          btn.textContent = 'Marcar LISTO (Avisar Mozo)'
+          btn.onclick = () => cambiarEstado(p.id, 'LISTO')
+        }
+
+        foot.appendChild(timer)
+        foot.appendChild(btn)
+        card.appendChild(body)
+        card.appendChild(foot)
+        grid.appendChild(card)
+      })
+    }
+
+    setInterval(() => {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-PE')
+      const now = Date.now()
+      document.querySelectorAll('.timer[data-created-at]').forEach((el) => {
+        const ms = now - Number(el.dataset.createdAt)
+        el.textContent = formatElapsed(ms)
+        el.className = 'timer' + (ms > 600000 ? ' late' : ms > 300000 ? ' warn' : '')
+      })
+    }, 1000)
+
+    const socket = io({ auth: { token } })
+    socket.on('connect', () => { document.getElementById('connPill').textContent = 'EN VIVO' })
+    socket.on('disconnect', () => { document.getElementById('connPill').textContent = 'RECONECTANDO' })
+    socket.on('pedidoNuevo', () => { playChime(); cargarCocina() })
+    socket.on('pedidoActualizado', () => cargarCocina())
+    socket.on('pedidoPagado', () => cargarCocina())
+
+    cargarCocina()
+  </script>
+</body>
+</html>

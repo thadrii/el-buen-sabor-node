@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Mozo — El Buen Sabor</title>
+  <style>
+    :root {
+      --bg: #f9f8f6;
+      --surface: #ffffff;
+      --surface-2: #f4f2ee;
+      --border: #dadde2;
+      --border-strong: #c0c3ca;
+      --text-high: #0d0d0f;
+      --text: #35383f;
+      --text-muted: #626976;
+      --accent: #c2410c;
+      --ok: #059669;
+      --ok-bg: #ecfdf5;
+      --warn: #b45309;
+      --warn-bg: #fef3c7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --serif: "IBM Plex Serif", Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      padding: 18px;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 18px;
+    }
+    header h1 { margin: 0; font-family: var(--serif); font-size: 20px; color: var(--text-high); }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-high);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cols {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-family: var(--serif);
+      font-size: 17px;
+      color: var(--text-high);
+    }
+    .item-card {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      background: var(--surface-2);
+    }
+    .item-card.listo { border-color: var(--ok); background: var(--ok-bg); }
+    .item-card.alerta { border-color: var(--danger); background: var(--danger-bg); }
+    .mesas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .mesa-box {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+    }
+    .mesa-box.ocupada { border-color: var(--warn); background: var(--warn-bg); }
+    .mesa-box.alerta { border-color: var(--danger); background: var(--danger-bg); }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #fff;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Panel de Mozo — Salón en Vivo</h1>
+        <span id="userLabel" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+      <div class="nav">
+        <a href="/cocina" class="btn" id="cocinaLink" style="display:none">Cocina</a>
+        <a href="/dashboard" class="btn" id="dashLink" style="display:none">Dashboard</a>
+        <a href="/" class="btn">Mesas QR</a>
+        <button type="button" class="btn" onclick="logout()">Salir</button>
+      </div>
+    </header>
+
+    <div class="cols">
+      <section class="panel">
+        <h2>Listos para llevar a mesa</h2>
+        <div id="listosBox"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Alertas de mesa (Llamados / Cuenta)</h2>
+        <div id="alertasBox"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Mapa de mesas</h2>
+      <div id="mesasGrid" class="mesas-grid"></div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (!token || !user || !['mozo', 'admin'].includes(user.rol)) {
+      window.location.href = '/login'
+    }
+
+    document.getElementById('userLabel').textContent = `${user.nombre} (${user.rol})`
+    if (user.rol === 'admin') {
+      document.getElementById('cocinaLink').style.display = 'inline-block'
+      document.getElementById('dashLink').style.display = 'inline-block'
+    }
+
+    function logout() {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+
+    async function cargarTodo() {
+      const [pedRes, mesasRes] = await Promise.all([
+        fetch('/api/pedidos/mozo', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/mesas')
+      ])
+      if (pedRes.status === 401 || pedRes.status === 403) return logout()
+      const pedidos = await pedRes.json()
+      const mesas = await mesasRes.json()
+      renderListos(pedidos)
+      renderAlertas(mesas)
+      renderMesas(mesas, pedidos)
+    }
+
+    async function entregarPedido(id) {
+      await fetch(`/api/pedidos/${encodeURIComponent(id)}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado: 'ENTREGADO' })
+      })
+      cargarTodo()
+    }
+
+    async function atenderMesa(codigo) {
+      await fetch(`/api/mesas/${encodeURIComponent(codigo)}/atender`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      cargarTodo()
+    }
+
+    function renderListos(pedidos) {
+      const box = document.getElementById('listosBox')
+      box.innerHTML = ''
+      const listos = pedidos.filter((p) => p.estado === 'LISTO')
+      if (listos.length === 0) {
+        box.textContent = 'No hay platos esperando entrega.'
+        box.style.fontSize = '12px'
+        return
+      }
+      listos.forEach((p) => {
+        const div = document.createElement('div')
+        div.className = 'item-card listo'
+        const h = document.createElement('strong')
+        h.textContent = `${p.mesaCodigo} · ${p.codigo}`
+        const ul = document.createElement('div')
+        ul.style.fontSize = '12px'
+        ul.style.margin = '6px 0 10px'
+        ul.textContent = (p.items || []).map((i) => `${i.cantidad}× ${i.nombre}`).join(', ')
+
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn btn-ok'
+        btn.textContent = 'Entregar en mesa'
+        btn.onclick = () => entregarPedido(p.id)
+
+        div.appendChild(h)
+        div.appendChild(ul)
+        div.appendChild(btn)
+        box.appendChild(div)
+      })
+    }
+
+    function renderAlertas(mesas) {
+      const box = document.getElementById('alertasBox')
+      box.innerHTML = ''
+      const alertas = mesas.filter((m) => m.llamandoMozo || m.estado === 'PIDIENDO_CUENTA')
+      if (alertas.length === 0) {
+        box.textContent = 'Sin alertas activas en salón.'
+        box.style.fontSize = '12px'
+        return
+      }
+      alertas.forEach((m) => {
+        const div = document.createElement('div')
+        div.className = 'item-card alerta'
+        const h = document.createElement('strong')
+        h.textContent = m.codigo
+        const msg = document.createElement('div')
+        msg.style.fontSize = '12px'
+        msg.style.margin = '6px 0 10px'
+        msg.textContent = m.motivoLlamado || 'Solicita asistencia'
+
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn btn-accent'
+        btn.textContent = 'Marcar atendida'
+        btn.onclick = () => atenderMesa(m.codigo)
+
+        div.appendChild(h)
+        div.appendChild(msg)
+        div.appendChild(btn)
+        box.appendChild(div)
+      })
+    }
+
+    function renderMesas(mesas, pedidos) {
+      const grid = document.getElementById('mesasGrid')
+      grid.innerHTML = ''
+      mesas.forEach((m) => {
+        const box = document.createElement('div')
+        box.className = 'mesa-box' +
+          (m.llamandoMozo || m.estado === 'PIDIENDO_CUENTA' ? ' alerta' : m.estado === 'OCUPADA' ? ' ocupada' : '')
+
+        const tit = document.createElement('div')
+        tit.style.fontWeight = '700'
+        tit.textContent = m.codigo
+
+        const badge = document.createElement('span')
+        badge.className = 'badge'
+        badge.textContent = m.estado
+
+        const ped = pedidos.find((p) => p.id === m.pedidoActivoId)
+        const info = document.createElement('div')
+        info.style.fontSize = '11px'
+        info.style.margin = '6px 0'
+        info.textContent = ped ? `${ped.codigo} · ${ped.estado}` : `Piso ${m.piso} · ${m.capacidad}p`
+
+        const link = document.createElement('a')
+        link.href = `/mesa/${encodeURIComponent(m.codigo)}`
+        link.style.fontSize = '11px'
+        link.style.color = 'var(--accent)'
+        link.textContent = 'Abrir carta'
+
+        box.appendChild(tit)
+        box.appendChild(badge)
+        box.appendChild(info)
+        box.appendChild(link)
+        grid.appendChild(box)
+      })
+    }
+
+    const socket = io({ auth: { token } })
+    socket.on('pedidoNuevo', () => cargarTodo())
+    socket.on('pedidoActualizado', () => cargarTodo())
+    socket.on('pedidoListo', () => cargarTodo())
+    socket.on('pedidoPagado', () => cargarTodo())
+    socket.on('alertaMesa', () => cargarTodo())
+    socket.on('mesaActualizada', () => cargarTodo())
+
+    cargarTodo()
+  </script>
+</body>
+</html>

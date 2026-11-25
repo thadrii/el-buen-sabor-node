@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Administrativo — El Buen Sabor</title>
+  <style>
+    :root {
+      --bg: #f9f8f6;
+      --surface: #ffffff;
+      --surface-2: #f4f2ee;
+      --border: #dadde2;
+      --border-strong: #c0c3ca;
+      --text-high: #0d0d0f;
+      --text: #35383f;
+      --text-muted: #626976;
+      --accent: #c2410c;
+      --ok: #059669;
+      --serif: "IBM Plex Serif", Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      padding: 18px;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+    header h1 { margin: 0; font-family: var(--serif); font-size: 20px; color: var(--text-high); }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-high);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+    }
+    .kpi span { font-size: 11px; color: var(--text-muted); display: block; }
+    .kpi strong { font-size: 22px; color: var(--text-high); display: block; margin-top: 4px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background: var(--surface);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tab-btn.active { background: var(--text-high); color: #fff; border-color: var(--text-high); }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 18px;
+      display: none;
+    }
+    .panel.active { display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td {
+      text-align: left;
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--text-muted); font-size: 11px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>El Buen Sabor — Dashboard Admin</h1>
+        <span id="userLabel" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+      <div class="nav">
+        <a href="/cocina" class="btn">Cocina KDS</a>
+        <a href="/mozo" class="btn">Panel Mozo</a>
+        <a href="/mesa/MESA-07" class="btn">Vista Mesa 7</a>
+        <button type="button" class="btn" onclick="logout()">Salir</button>
+      </div>
+    </header>
+
+    <section class="kpis" id="kpiGrid"></section>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" onclick="showTab('resumen', this)">Pedidos y Top Platos</button>
+      <button type="button" class="tab-btn" onclick="showTab('carta', this)">Gestionar Carta</button>
+      <button type="button" class="tab-btn" onclick="showTab('resenas', this)">Reseñas</button>
+      <button type="button" class="tab-btn" onclick="showTab('mesas', this)">Enlaces QR Mesas</button>
+    </div>
+
+    <section id="tab-resumen" class="panel active">
+      <h3 style="margin-top:0">Últimos pedidos</h3>
+      <table>
+        <thead>
+          <tr><th>Código</th><th>Mesa</th><th>Estado</th><th>Total</th><th>Pago</th></tr>
+        </thead>
+        <tbody id="pedidosBody"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-carta" class="panel">
+      <h3 style="margin-top:0">Agregar nuevo plato</h3>
+      <form id="platoForm">
+        <div class="form-row">
+          <input id="pNombre" type="text" placeholder="Nombre del plato" required>
+          <select id="pCat">
+            <option value="Platos">Platos</option>
+            <option value="Entradas">Entradas</option>
+            <option value="Bebidas">Bebidas</option>
+            <option value="Postres">Postres</option>
+          </select>
+          <input id="pPrecio" type="number" step="0.5" min="1" placeholder="Precio (S/)" required>
+          <input id="pTiempo" type="number" min="1" value="10" placeholder="Minutos prep">
+          <button type="submit" class="btn btn-accent">Guardar plato</button>
+        </div>
+        <input id="pDesc" type="text" placeholder="Descripción breve" style="margin-bottom:14px">
+      </form>
+      <table>
+        <thead>
+          <tr><th>Plato</th><th>Categoría</th><th>Precio</th><th>Prep</th><th>Acción</th></tr>
+        </thead>
+        <tbody id="cartaBody"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-resenas" class="panel">
+      <h3 style="margin-top:0">Calificaciones de clientes</h3>
+      <div id="resenasList"></div>
+    </section>
+
+    <section id="tab-mesas" class="panel">
+      <h3 style="margin-top:0">Accesos directos por mesa (QR)</h3>
+      <div id="mesasLinks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px"></div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (!token || !user || user.rol !== 'admin') {
+      window.location.href = '/login'
+    }
+    document.getElementById('userLabel').textContent = `${user.nombre} (${user.email})`
+
+    function logout() {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+
+    function showTab(name, btn) {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'))
+      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'))
+      btn.classList.add('active')
+      document.getElementById(`tab-${name}`).classList.add('active')
+    }
+
+    function money(n) { return 'S/ ' + Number(n || 0).toFixed(2) }
+
+    async function cargarDashboard() {
+      const [dashRes, platosRes, mesasRes] = await Promise.all([
+        fetch('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/platos?all=1'),
+        fetch('/api/mesas')
+      ])
+      if (dashRes.status === 401 || dashRes.status === 403) return logout()
+      const dash = await dashRes.json()
+      const platos = await platosRes.json()
+      const mesas = await mesasRes.json()
+
+      const k = dash.kpis
+      const kpis = [
+        ['Ingresos pagados', money(k.ingresosTotales)],
+        ['Pedidos totales', k.totalPedidos],
+        ['En cocina ahora', k.enCocina],
+        ['Mesas ocupadas', `${k.mesasOcupadas} / ${k.totalMesas}`],
+        ['Calificación promedio', `${k.calificacionPromedio} ★ (${k.totalResenas})`]
+      ]
+      const kpiGrid = document.getElementById('kpiGrid')
+      kpiGrid.innerHTML = ''
+      kpis.forEach(([label, val]) => {
+        const d = document.createElement('div')
+        d.className = 'kpi'
+        const s = document.createElement('span')
+        s.textContent = label
+        const st = document.createElement('strong')
+        st.textContent = val
+        d.appendChild(s)
+        d.appendChild(st)
+        kpiGrid.appendChild(d)
+      })
+
+      const pBody = document.getElementById('pedidosBody')
+      pBody.innerHTML = ''
+      dash.ultimosPedidos.forEach((p) => {
+        const tr = document.createElement('tr')
+        ;[p.codigo, p.mesaCodigo, p.estado, money(p.total), p.metodoPago || '-'].forEach((v) => {
+          const td = document.createElement('td')
+          td.textContent = v
+          tr.appendChild(td)
+        })
+        pBody.appendChild(tr)
+      })
+
+      const cBody = document.getElementById('cartaBody')
+      cBody.innerHTML = ''
+      platos.forEach((pl) => {
+        const tr = document.createElement('tr')
+        ;[pl.nombre, pl.categoria, money(pl.precio), `${pl.tiempoPrepMin} min`].forEach((v) => {
+          const td = document.createElement('td')
+          td.textContent = v
+          tr.appendChild(td)
+        })
+        const tdAcc = document.createElement('td')
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn'
+        btn.textContent = 'Eliminar'
+        btn.onclick = () => eliminarPlato(pl.id)
+        tdAcc.appendChild(btn)
+        tr.appendChild(tdAcc)
+        cBody.appendChild(tr)
+      })
+
+      const rList = document.getElementById('resenasList')
+      rList.innerHTML = ''
+      if (dash.ultimasResenas.length === 0) {
+        rList.textContent = 'Aún no hay reseñas registradas.'
+      } else {
+        dash.ultimasResenas.forEach((r) => {
+          const d = document.createElement('div')
+          d.style.padding = '10px 0'
+          d.style.borderBottom = '1px dashed var(--border)'
+          d.textContent = `${'★'.repeat(r.estrellas)} (${r.mesaCodigo}) — ${r.comentario || 'Sin comentario'}`
+          rList.appendChild(d)
+        })
+      }
+
+      const mLinks = document.getElementById('mesasLinks')
+      mLinks.innerHTML = ''
+      mesas.forEach((m) => {
+        const a = document.createElement('a')
+        a.href = `/mesa/${encodeURIComponent(m.codigo)}`
+        a.className = 'btn'
+        a.textContent = `${m.codigo} (${m.estado})`
+        mLinks.appendChild(a)
+      })
+    }
+
+    document.getElementById('platoForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const res = await fetch('/api/platos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: document.getElementById('pNombre').value,
+          categoria: document.getElementById('pCat').value,
+          precio: Number(document.getElementById('pPrecio').value),
+          tiempoPrepMin: Number(document.getElementById('pTiempo').value),
+          descripcion: document.getElementById('pDesc').value
+        })
+      })
+      if (res.ok) {
+        e.target.reset()
+        cargarDashboard()
+      }
+    })
+
+    async function eliminarPlato(id) {
+      await fetch(`/api/platos/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      cargarDashboard()
+    }
+
+    const socket = io({ auth: { token } })
+    socket.on('pedidoNuevo', () => cargarDashboard())
+    socket.on('pedidoActualizado', () => cargarDashboard())
+    socket.on('pedidoPagado', () => cargarDashboard())
+    socket.on('resenaNueva', () => cargarDashboard())
+
+    cargarDashboard()
+  </script>
+</body>
+</html>

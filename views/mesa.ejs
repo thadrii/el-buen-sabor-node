@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= mesaCodigo %> — El Buen Sabor</title>
+  <style>
+    :root {
+      --bg: #f9f8f6;
+      --surface: #ffffff;
+      --surface-2: #f4f2ee;
+      --border: #dadde2;
+      --border-strong: #c0c3ca;
+      --text-high: #0d0d0f;
+      --text: #35383f;
+      --text-muted: #626976;
+      --accent: #c2410c;
+      --accent-hover: #9a3412;
+      --accent-soft: #fff7ed;
+      --ok: #059669;
+      --ok-bg: #ecfdf5;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --serif: "IBM Plex Serif", Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      padding-bottom: 92px;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+    .topbar-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .mesa-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-high);
+    }
+    .mesa-tag {
+      background: var(--accent);
+      color: #fff;
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: #9ca3af;
+      display: inline-block;
+    }
+    .live-dot.on { background: var(--ok); }
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-high);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--surface-2); }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .btn-ai { background: #0f172a; border-color: #0f172a; color: #fff; }
+    .container {
+      max-width: 780px;
+      margin: 18px auto 0;
+      padding: 0 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card h2, .card h3 {
+      margin: 0 0 10px;
+      font-family: var(--serif);
+      color: var(--text-high);
+    }
+    .tracker-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .t-step {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      text-align: center;
+      color: var(--text-muted);
+      background: var(--surface-2);
+    }
+    .t-step.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .t-step.done {
+      border-color: #a7f3d0;
+      background: var(--ok-bg);
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .cats {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-bottom: 14px;
+      padding-bottom: 4px;
+    }
+    .cat-btn {
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .cat-btn.active {
+      background: var(--text-high);
+      color: #fff;
+      border-color: var(--text-high);
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .plato-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .plato-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .plato-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-high);
+    }
+    .plato-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin: 6px 0 0;
+    }
+    .plato-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+    .precio { font-weight: 700; color: var(--text-high); font-size: 14px; }
+    .prep { font-size: 11px; color: var(--text-muted); }
+    .cart-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 25;
+      background: var(--text-high);
+      color: #fff;
+      padding: 12px 16px;
+      border-top: 2px solid var(--accent);
+      display: none;
+    }
+    .cart-bar-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgba(13, 13, 15, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 20px;
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .chip-btn {
+      padding: 5px 9px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .chip-btn:hover { border-color: var(--accent); }
+    .pay-methods {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+    .pay-opt {
+      padding: 9px 6px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background: var(--surface);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .pay-opt.selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .stars { display: flex; gap: 6px; margin: 10px 0; }
+    .star-btn {
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #d1d5db;
+      padding: 0 2px;
+    }
+    .star-btn.on { color: #f59e0b; }
+    .toast {
+      position: fixed;
+      top: 68px;
+      right: 16px;
+      z-index: 50;
+      background: var(--text-high);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .item-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="mesa-pill">
+        <span class="mesa-tag"><%= mesaCodigo %></span>
+        <span>El Buen Sabor</span>
+        <span id="liveDot" class="live-dot" title="Conexión en tiempo real"></span>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="btn btn-ai" onclick="abrirAsistente()">+ Asistente</button>
+        <button type="button" class="btn" onclick="llamarMozo()">Llamar al mozo</button>
+        <a href="/" class="btn">Mesas</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="container">
+    <!-- Pedido activo / seguimiento en tiempo real -->
+    <div id="pedidoBox" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <h3 style="margin:0">Tu pedido <span id="pedCodigo"></span></h3>
+        <span id="pedEstadoBadge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:3px;background:var(--warn-bg);color:var(--warn)"></span>
+      </div>
+      <div class="tracker-steps" id="trackerSteps">
+        <div class="t-step" data-step="CREADO">1. Enviado a cocina</div>
+        <div class="t-step" data-step="EN_COCINA">2. En preparación</div>
+        <div class="t-step" data-step="LISTO">3. Listo para llevar</div>
+        <div class="t-step" data-step="ENTREGADO">4. En tu mesa</div>
+      </div>
+      <div id="pedItems"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <strong>Total cuenta</strong>
+        <strong id="pedTotal" style="font-size:16px">S/ 0.00</strong>
+      </div>
+
+      <div id="pagoBox" style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px">Pagar desde tu mesa (sin esperar)</div>
+        <div class="pay-methods">
+          <button type="button" class="pay-opt selected" onclick="selectMetodo(this, 'Tarjeta')">Tarjeta</button>
+          <button type="button" class="pay-opt" onclick="selectMetodo(this, 'Yape / Plin')">Yape / Plin</button>
+          <button type="button" class="pay-opt" onclick="selectMetodo(this, 'Efectivo')">Efectivo</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ok" style="flex:1" onclick="pagarAhora()">Pagar ahora</button>
+          <button type="button" class="btn" onclick="pedirCuentaMozo()">Pedir la cuenta al mozo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boleta aprobada + Reseña post-pago -->
+    <div id="resenaBox" class="card" style="display:none">
+      <div id="boletaBanner" style="padding:10px 12px;background:var(--ok-bg);border:1px solid #a7f3d0;border-radius:4px;margin-bottom:12px;font-size:12px;color:var(--ok)"></div>
+      <h3>¿Cómo estuvo todo hoy?</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px">Tu opinión nos ayuda a seguir mejorando.</p>
+      <div class="stars" id="starContainer">
+        <button type="button" class="star-btn on" onclick="setStars(1)">★</button>
+        <button type="button" class="star-btn on" onclick="setStars(2)">★</button>
+        <button type="button" class="star-btn on" onclick="setStars(3)">★</button>
+        <button type="button" class="star-btn on" onclick="setStars(4)">★</button>
+        <button type="button" class="star-btn on" onclick="setStars(5)">★</button>
+      </div>
+      <textarea id="resenaTexto" rows="2" placeholder="Ej: Todo llegó rápido y delicioso, sin esperar a nadie."></textarea>
+      <button type="button" class="btn btn-accent" style="margin-top:10px" onclick="enviarResena()">Publicar reseña</button>
+    </div>
+
+    <!-- Carta Digital -->
+    <div class="cats" id="catBar">
+      <button type="button" class="cat-btn active" onclick="filtrarCat('Todos', this)">Todos</button>
+      <button type="button" class="cat-btn" onclick="filtrarCat('Entradas', this)">Entradas</button>
+      <button type="button" class="cat-btn" onclick="filtrarCat('Platos', this)">Platos</button>
+      <button type="button" class="cat-btn" onclick="filtrarCat('Bebidas', this)">Bebidas</button>
+      <button type="button" class="cat-btn" onclick="filtrarCat('Postres', this)">Postres</button>
+    </div>
+
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+
+  <!-- Barra inferior del carrito -->
+  <div id="cartBar" class="cart-bar">
+    <div class="cart-bar-inner">
+      <div>
+        <strong id="cartCount">0 platos</strong> · <span id="cartTotal">S/ 0.00</span>
+      </div>
+      <button type="button" class="btn btn-accent" onclick="abrirCarrito()">Ver y pedir (<%= mesaCodigo %>)</button>
+    </div>
+  </div>
+
+  <!-- Modal Carrito -->
+  <div id="modalCart" class="modal-bg">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 style="margin:0">Tu pedido · <%= mesaCodigo %></h3>
+        <button type="button" class="btn" onclick="cerrarModal('modalCart')">Cerrar</button>
+      </div>
+      <div id="cartList"></div>
+      <div style="margin-top:12px">
+        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Notas para cocina (opcional)</label>
+        <input id="notasPedido" type="text" placeholder="Ej: Sin cebolla, término medio...">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0">
+        <strong>Total a enviar</strong>
+        <strong id="modalCartTotal">S/ 0.00</strong>
+      </div>
+      <button type="button" class="btn btn-accent" style="width:100%" onclick="enviarPedido()">Pedir ahora — <%= mesaCodigo %></button>
+    </div>
+  </div>
+
+  <!-- Modal Asistente -->
+  <div id="modalAi" class="modal-bg">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 style="margin:0">Asistente de la Carta</h3>
+        <button type="button" class="btn" onclick="cerrarModal('modalAi')">Cerrar</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px">¿Qué tienes ganas de comer hoy?</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        <button type="button" class="chip-btn" onclick="consultarAi('Mucha hambre, poca paciencia')">Mucha hambre, poca paciencia</button>
+        <button type="button" class="chip-btn" onclick="consultarAi('Algo ligero y fresco')">Algo ligero y fresco</button>
+        <button type="button" class="chip-btn" onclick="consultarAi('Postre y bebida fría')">Postre y bebida fría</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input id="aiInput" type="text" placeholder="Escribe lo que prefieres...">
+        <button type="button" class="btn btn-ai" onclick="consultarAi()">Buscar</button>
+      </div>
+      <div id="aiResult" style="font-size:12px"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const MESA_CODIGO = '<%= mesaCodigo %>'
+    let platos = []
+    let categoriaActual = 'Todos'
+    let carrito = []
+    let pedidoActivo = null
+    let metodoPago = 'Tarjeta'
+    let estrellas = 5
+    let ultimoPedidoPagadoId = null
+
+    function money(n) {
+      return 'S/ ' + Number(n || 0).toFixed(2)
+    }
+
+    function showToast(txt) {
+      const t = document.getElementById('toast')
+      t.textContent = txt
+      t.style.display = 'block'
+      clearTimeout(window.__toastTimer)
+      window.__toastTimer = setTimeout(() => { t.style.display = 'none' }, 3200)
+    }
+
+    function abrirModal(id) { document.getElementById(id).classList.add('open') }
+    function cerrarModal(id) { document.getElementById(id).classList.remove('open') }
+    function abrirAsistente() { abrirModal('modalAi') }
+    function abrirCarrito() { renderCarritoModal(); abrirModal('modalCart') }
+
+    function filtrarCat(cat, btn) {
+      categoriaActual = cat
+      document.querySelectorAll('.cat-btn').forEach((b) => b.classList.remove('active'))
+      btn.classList.add('active')
+      renderMenu()
+    }
+
+    function agregarAlCarrito(platoId) {
+      const p = platos.find((x) => x.id === platoId)
+      if (!p) return
+      const existing = carrito.find((c) => c.platoId === platoId)
+      if (existing) existing.cantidad += 1
+      else carrito.push({ platoId: p.id, nombre: p.nombre, precio: p.precio, cantidad: 1 })
+      actualizarBarraCarrito()
+      showToast(`Agregado: ${p.nombre}`)
+    }
+
+    function cambiarCant(platoId, delta) {
+      const idx = carrito.findIndex((c) => c.platoId === platoId)
+      if (idx === -1) return
+      carrito[idx].cantidad += delta
+      if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1)
+      actualizarBarraCarrito()
+      renderCarritoModal()
+    }
+
+    function actualizarBarraCarrito() {
+      const count = carrito.reduce((a, b) => a + b.cantidad, 0)
+      const total = carrito.reduce((a, b) => a + b.cantidad * b.precio, 0)
+      const bar = document.getElementById('cartBar')
+      if (count === 0) {
+        bar.style.display = 'none'
+      } else {
+        bar.style.display = 'block'
+        document.getElementById('cartCount').textContent = `${count} ${count === 1 ? 'plato' : 'platos'}`
+        document.getElementById('cartTotal').textContent = money(total)
+      }
+    }
+
+    function renderCarritoModal() {
+      const list = document.getElementById('cartList')
+      list.innerHTML = ''
+      if (carrito.length === 0) {
+        list.textContent = 'Tu carrito está vacío.'
+        document.getElementById('modalCartTotal').textContent = money(0)
+        return
+      }
+      let total = 0
+      carrito.forEach((it) => {
+        total += it.cantidad * it.precio
+        const row = document.createElement('div')
+        row.className = 'item-line'
+        const left = document.createElement('span')
+        left.textContent = `${it.nombre} (${money(it.precio)})`
+        const right = document.createElement('div')
+        right.style.display = 'flex'
+        right.style.alignItems = 'center'
+        right.style.gap = '6px'
+
+        const btnMenos = document.createElement('button')
+        btnMenos.type = 'button'
+        btnMenos.className = 'btn'
+        btnMenos.textContent = '-'
+        btnMenos.onclick = () => cambiarCant(it.platoId, -1)
+
+        const qty = document.createElement('strong')
+        qty.textContent = it.cantidad
+
+        const btnMas = document.createElement('button')
+        btnMas.type = 'button'
+        btnMas.className = 'btn'
+        btnMas.textContent = '+'
+        btnMas.onclick = () => cambiarCant(it.platoId, 1)
+
+        right.appendChild(btnMenos)
+        right.appendChild(qty)
+        right.appendChild(btnMas)
+        row.appendChild(left)
+        row.appendChild(right)
+        list.appendChild(row)
+      })
+      document.getElementById('modalCartTotal').textContent = money(total)
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById('menuGrid')
+      grid.innerHTML = ''
+      const visibles = categoriaActual === 'Todos'
+        ? platos
+        : platos.filter((p) => p.categoria === categoriaActual)
+
+      visibles.forEach((p) => {
+        const card = document.createElement('div')
+        card.className = 'plato-card'
+
+        const top = document.createElement('div')
+        const head = document.createElement('div')
+        head.className = 'plato-head'
+        const title = document.createElement('div')
+        title.className = 'plato-title'
+        title.textContent = `${p.icono || '🍽️'} ${p.nombre}`
+        const prep = document.createElement('span')
+        prep.className = 'prep'
+        prep.textContent = `~${p.tiempoPrepMin || 10} min`
+        head.appendChild(title)
+        head.appendChild(prep)
+
+        const desc = document.createElement('p')
+        desc.className = 'plato-desc'
+        desc.textContent = p.descripcion || ''
+
+        top.appendChild(head)
+        top.appendChild(desc)
+
+        const foot = document.createElement('div')
+        foot.className = 'plato-foot'
+        const price = document.createElement('span')
+        price.className = 'precio'
+        price.textContent = money(p.precio)
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn btn-accent'
+        btn.textContent = '+ Agregar'
+        btn.onclick = () => agregarAlCarrito(p.id)
+
+        foot.appendChild(price)
+        foot.appendChild(btn)
+        card.appendChild(top)
+        card.appendChild(foot)
+        grid.appendChild(card)
+      })
+    }
+
+    function renderPedidoActivo(ped) {
+      pedidoActivo = ped
+      const box = document.getElementById('pedidoBox')
+      if (!ped || ped.estado === 'CANCELADO') {
+        box.style.display = 'none'
+        return
+      }
+      if (ped.estado === 'PAGADO') {
+        box.style.display = 'none'
+        ultimoPedidoPagadoId = ped.id
+        document.getElementById('boletaBanner').textContent =
+          `Pago aprobado (${ped.metodoPago}) · Comprobante ${ped.comprobante} · ${money(ped.total)}`
+        document.getElementById('resenaBox').style.display = 'block'
+        return
+      }
+
+      box.style.display = 'block'
+      document.getElementById('resenaBox').style.display = 'none'
+      document.getElementById('pedCodigo').textContent = ped.codigo
+      document.getElementById('pedEstadoBadge').textContent = ped.estado
+      document.getElementById('pedTotal').textContent = money(ped.total)
+
+      const orden = ['CREADO', 'EN_COCINA', 'LISTO', 'ENTREGADO']
+      const idxActual = orden.indexOf(ped.estado)
+      document.querySelectorAll('#trackerSteps .t-step').forEach((el) => {
+        el.classList.remove('active', 'done')
+        const idx = orden.indexOf(el.dataset.step)
+        if (idx < idxActual) el.classList.add('done')
+        else if (idx === idxActual) el.classList.add('active')
+      })
+
+      const itemsDiv = document.getElementById('pedItems')
+      itemsDiv.innerHTML = ''
+      ;(ped.items || []).forEach((it) => {
+        const row = document.createElement('div')
+        row.className = 'item-line'
+        const left = document.createElement('span')
+        left.textContent = `${it.cantidad}× ${it.nombre}`
+        const right = document.createElement('span')
+        right.textContent = money(it.subtotal)
+        row.appendChild(left)
+        row.appendChild(right)
+        itemsDiv.appendChild(row)
+      })
+    }
+
+    async function enviarPedido() {
+      if (carrito.length === 0) return
+      const notasGenerales = document.getElementById('notasPedido').value.trim()
+      const res = await fetch('/api/pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mesaCodigo: MESA_CODIGO,
+          items: carrito.map((c) => ({ platoId: c.platoId, cantidad: c.cantidad })),
+          notasGenerales
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.message || 'No se pudo enviar el pedido')
+        return
+      }
+      carrito = []
+      document.getElementById('notasPedido').value = ''
+      actualizarBarraCarrito()
+      cerrarModal('modalCart')
+      renderPedidoActivo(data.pedido)
+      showToast('Pedido enviado directo a cocina')
+    }
+
+    function selectMetodo(btn, metodo) {
+      metodoPago = metodo
+      document.querySelectorAll('.pay-opt').forEach((b) => b.classList.remove('selected'))
+      btn.classList.add('selected')
+    }
+
+    async function pagarAhora() {
+      if (!pedidoActivo) return
+      const res = await fetch(`/api/pedidos/${encodeURIComponent(pedidoActivo.id)}/pagar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metodoPago })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.message || 'Error al procesar pago')
+        return
+      }
+      renderPedidoActivo(data.pedido)
+      showToast('¡Pago aprobado sin esperar!')
+    }
+
+    async function llamarMozo() {
+      const res = await fetch(`/api/mesas/${encodeURIComponent(MESA_CODIGO)}/llamar-mozo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo: 'Cliente solicita atención en mesa' })
+      })
+      if (res.ok) showToast('Avisamos al mozo en tiempo real')
+    }
+
+    async function pedirCuentaMozo() {
+      const res = await fetch(`/api/mesas/${encodeURIComponent(MESA_CODIGO)}/pedir-cuenta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (res.ok) showToast('El mozo ya recibió tu solicitud de cuenta')
+    }
+
+    async function consultarAi(textoFijo) {
+      const input = document.getElementById('aiInput')
+      const consulta = textoFijo || input.value.trim()
+      if (textoFijo) input.value = textoFijo
+      const res = await fetch('/api/asistente/recomendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consulta })
+      })
+      const data = await res.json()
+      const cont = document.getElementById('aiResult')
+      cont.innerHTML = ''
+      const p = document.createElement('p')
+      p.style.fontWeight = '700'
+      p.textContent = data.mensaje
+      cont.appendChild(p)
+
+      ;(data.recomendaciones || []).forEach((plato) => {
+        const row = document.createElement('div')
+        row.className = 'item-line'
+        const info = document.createElement('div')
+        info.innerHTML = ''
+        const tit = document.createElement('strong')
+        tit.textContent = `${plato.icono || '🍽️'} ${plato.nombre}`
+        const sub = document.createElement('div')
+        sub.style.fontSize = '11px'
+        sub.style.color = 'var(--text-muted)'
+        sub.textContent = `${money(plato.precio)} · ~${plato.tiempoPrepMin} min`
+        info.appendChild(tit)
+        info.appendChild(sub)
+
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn btn-accent'
+        btn.textContent = '+ Agregar'
+        btn.onclick = () => { agregarAlCarrito(plato.id); cerrarModal('modalAi') }
+
+        row.appendChild(info)
+        row.appendChild(btn)
+        cont.appendChild(row)
+      })
+    }
+
+    function setStars(n) {
+      estrellas = n
+      document.querySelectorAll('#starContainer .star-btn').forEach((b, i) => {
+        b.classList.toggle('on', i < n)
+      })
+    }
+
+    async function enviarResena() {
+      const comentario = document.getElementById('resenaTexto').value.trim()
+      const res = await fetch('/api/resenas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedidoId: ultimoPedidoPagadoId,
+          mesaCodigo: MESA_CODIGO,
+          estrellas,
+          comentario
+        })
+      })
+      if (res.ok) {
+        document.getElementById('resenaBox').innerHTML =
+          '<strong style="color:var(--ok)">¡Gracias por tu calificación de ' + estrellas + ' estrellas!</strong>'
+      }
+    }
+
+    async function init() {
+      const [platosRes, mesaRes] = await Promise.all([
+        fetch('/api/platos'),
+        fetch(`/api/mesas/${encodeURIComponent(MESA_CODIGO)}`)
+      ])
+      platos = await platosRes.json()
+      renderMenu()
+      if (mesaRes.ok) {
+        const detalle = await mesaRes.json()
+        if (detalle.pedidoActivo) renderPedidoActivo(detalle.pedidoActivo)
+      }
+
+      const socket = io({ auth: { tableCode: MESA_CODIGO } })
+      socket.on('connect', () => document.getElementById('liveDot').classList.add('on'))
+      socket.on('disconnect', () => document.getElementById('liveDot').classList.remove('on'))
+      socket.on('cartaActualizada', (nuevosPlatos) => {
+        platos = nuevosPlatos
+        renderMenu()
+      })
+      socket.on('pedidoActualizado', (ped) => {
+        renderPedidoActivo(ped)
+        if (ped.estado === 'EN_COCINA') showToast('Cocina ya está preparando tu pedido')
+        if (ped.estado === 'LISTO') showToast('¡Tu pedido está listo! El mozo va en camino')
+        if (ped.estado === 'ENTREGADO') showToast('¡Buen provecho!')
+      })
+    }
+
+    init()
+  </script>
+</body>
+</html>

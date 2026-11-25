@@ -1,0 +1,23 @@
+{
+  "name": "el-buen-sabor-node",
+  "version": "1.0.0",
+  "description": "Sistema web en tiempo real para pedidos, cocina, meseros y pagos en restaurante (estilo node502)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed": "node seed.js"
+  },
+  "author": "Jack Tejada",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ejs": "^5.0.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3"
+  }
+}

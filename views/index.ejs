@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Buen Sabor — Carta Digital &amp; Cocina en Tiempo Real</title>
+  <style>
+    :root {
+      --bg: #f9f8f6;
+      --surface: #ffffff;
+      --surface-2: #f4f2ee;
+      --border: #dadde2;
+      --border-strong: #c0c3ca;
+      --text-high: #0d0d0f;
+      --text: #35383f;
+      --text-muted: #626976;
+      --accent: #c2410c;
+      --accent-hover: #9a3412;
+      --accent-soft: #fff7ed;
+      --ok: #059669;
+      --ok-bg: #ecfdf5;
+      --sh-zed: 6px 6px 0 rgba(194, 65, 12, 0.06), -6px -6px 0 rgba(194, 65, 12, 0.03);
+      --serif: "IBM Plex Serif", "Iowan Old Style", Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      letter-spacing: -0.015em;
+      padding: 24px 16px 48px;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(194, 65, 12, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(194, 65, 12, 0.035) 1px, transparent 1px);
+      background-size: 14px 14px;
+      z-index: 0;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: var(--sh-zed);
+      margin-bottom: 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 18px;
+      border-radius: 4px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--text-high);
+    }
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .nav-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border-strong);
+      color: var(--text-high);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: var(--surface-2); }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .hero {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--sh-zed);
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid #fed7aa;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .hero h2 {
+      margin: 0 0 10px;
+      font-family: var(--serif);
+      font-size: 28px;
+      color: var(--text-high);
+      line-height: 1.2;
+    }
+    .hero p {
+      margin: 0 0 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 68ch;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .step {
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .step strong {
+      display: block;
+      color: var(--text-high);
+      margin-bottom: 4px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 22px 24px;
+      box-shadow: var(--sh-zed);
+    }
+    .panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .panel-head h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--text-high);
+    }
+    .mesas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+      gap: 10px;
+    }
+    .mesa-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      text-decoration: none;
+      color: var(--text-high);
+      background: var(--surface);
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    .mesa-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .mesa-card.destacada {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .mesa-code { font-weight: 700; font-size: 14px; }
+    .mesa-meta { font-size: 11px; color: var(--text-muted); }
+    .badge {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      width: fit-content;
+    }
+    .badge-libre { background: var(--ok-bg); color: var(--ok); border: 1px solid #a7f3d0; }
+    .badge-ocupada { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-cuenta { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-err {
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      background: #fff2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">BS</div>
+        <div>
+          <h1>El Buen Sabor</h1>
+          <p>Pedidos sin espera · Cocina &amp; Salón en tiempo real</p>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a href="/mesa/MESA-07" class="btn btn-primary">Probar como Cliente (Mesa 7)</a>
+        <a href="/login" class="btn">Acceso Personal (JWT)</a>
+      </div>
+    </header>
+
+    <% if (typeof errorMesa !== 'undefined' && errorMesa) { %>
+      <div class="alert-err"><%= errorMesa %></div>
+    <% } %>
+
+    <section class="hero">
+      <span class="tag">CERO ESPERAS EN MESA · SOCKET.IO + JWT</span>
+      <h2>Escanea tu mesa, pide directo a cocina y paga desde tu celular.</h2>
+      <p>
+        Sin levantar la mano media hora ni descargar aplicaciones. El cliente elige sus platos (o consulta al asistente inteligente), el pedido llega al instante al tablero de cocina con el número de mesa, el mozo recibe aviso apenas está listo y el pago se aprueba en segundos.
+      </p>
+      <div class="steps">
+        <div class="step">
+          <strong>1. Cliente en Mesa</strong>
+          Abre la carta digital, consulta al asistente y envía su pedido.
+        </div>
+        <div class="step">
+          <strong>2. Tablero de Cocina (KDS)</strong>
+          Recibe la orden en vivo por orden de llegada con cronómetro.
+        </div>
+        <div class="step">
+          <strong>3. Panel del Mozo</strong>
+          Alerta automática cuando el plato está listo y a qué mesa llevarlo.
+        </div>
+        <div class="step">
+          <strong>4. Cuenta &amp; Reseña</strong>
+          Paga desde la mesa y califica con estrellas al instante.
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Simular escaneo QR de mesa</h3>
+        <span style="font-size:12px;color:var(--text-muted)">Selecciona una mesa para abrir su carta digital</span>
+      </div>
+      <div id="mesasGrid" class="mesas-grid">
+        <div style="font-size:12px;color:var(--text-muted)">Cargando mesas...</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    async function cargarMesas() {
+      try {
+        const res = await fetch('/api/mesas')
+        const mesas = await res.json()
+        const grid = document.getElementById('mesasGrid')
+        grid.innerHTML = ''
+        mesas.forEach((m) => {
+          const a = document.createElement('a')
+          a.href = `/mesa/${encodeURIComponent(m.codigo)}`
+          a.className = 'mesa-card' + (m.codigo === 'MESA-07' ? ' destacada' : '')
+
+          const badgeCls = m.estado === 'LIBRE'
+            ? 'badge-libre'
+            : m.estado === 'PIDIENDO_CUENTA'
+              ? 'badge-cuenta'
+              : 'badge-ocupada'
+
+          const code = document.createElement('span')
+          code.className = 'mesa-code'
+          code.textContent = m.codigo + (m.codigo === 'MESA-07' ? ' ★' : '')
+
+          const meta = document.createElement('span')
+          meta.className = 'mesa-meta'
+          meta.textContent = `Piso ${m.piso} · ${m.capacidad} pers.`
+
+          const badge = document.createElement('span')
+          badge.className = `badge ${badgeCls}`
+          badge.textContent = m.estado
+
+          a.appendChild(code)
+          a.appendChild(meta)
+          a.appendChild(badge)
+          grid.appendChild(a)
+        })
+      } catch (err) {
+        document.getElementById('mesasGrid').textContent = 'No se pudieron cargar las mesas.'
+      }
+    }
+    cargarMesas()
+  </script>
+</body>
+</html>
